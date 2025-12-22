@@ -67,8 +67,6 @@ Quelques remarques pour lire correctement la vidéo :
 
 # Comment reproduire la démo (pas à pas)
 
-> ✅ Astuce : utilise **3 terminaux** (bag / ekf / metrics), puis lance PlotJuggler dans un 4ᵉ.
-
 ## 1) Rejouer le rosbag (en boucle + horloge simulée)
 On démarre par le rosbag. C’est lui qui fournit les données (odom/IMU/etc.) et l’horloge `/clock`.
 
