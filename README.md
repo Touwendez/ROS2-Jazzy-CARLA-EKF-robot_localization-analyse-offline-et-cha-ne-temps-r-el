@@ -38,7 +38,7 @@ La solution propre consiste à :
 
 ---
 
-## Ce qu’on mesure en temps réel (topics `/metrics/*`)
+## Ce qu’on mesure en temps réel (topics `/metrics/`)
 Le script `online_compare.py` publie en live :
 - `/metrics/ex` et `/metrics/ey` : erreurs en x/y,
 - `/metrics/e2d` : norme 2D de l’erreur,
@@ -49,7 +49,13 @@ Le script `online_compare.py` publie en live :
 ---
 
 ## Vidéo PlotJuggler (démo)
+
+
 Une vidéo de démonstration est incluse dans le dépôt.
+
+
+https://github.com/user-attachments/assets/5962419e-e050-4794-9170-d4bd04219640
+
 
 Elle montre l’évolution **en temps réel** des courbes PlotJuggler :
 - `e2d` (erreur 2D instantanée),
