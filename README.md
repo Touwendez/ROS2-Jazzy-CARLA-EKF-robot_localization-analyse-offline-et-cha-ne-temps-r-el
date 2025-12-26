@@ -142,35 +142,6 @@ Cette étape constitue une base solide pour la suite du projet, en particulier p
 
 ---
 
-## Commandes de reproduction (rejouer l’étape A1)
-
-### Terminal 1 — Lecture du rosbag
-```bash
-source /opt/ros/jazzy/setup.bash
-ros2 bag play ~/Téléchargements/carla_data/carla_data_0.db3 --loop
-
-
-
-
-#  EKF (robot_localization) : analyse offline chaîne temps réel
-
-## Pourquoi ce dépôt existe
-Ce dépôt regroupe notre travail autour de la localisation d’un véhicule (CARLA) avec **ROS2 Jazzy** et un **EKF** (package `robot_localization`).
-
-On a commencé par une analyse **hors-ligne** (export CSV + notebook) pour valider nos métriques et comparer plusieurs configurations (odom seule, IMU seule, fusion).  
-Ensuite, on a construit la version **temps réel** : on s’abonne aux topics ROS2, on calcule les métriques au fil de l’eau, et on les affiche en direct avec PlotJuggler.
-
----
-
-## Étape A1 : Analyse hors-ligne (CSV + notebook)
-Dans l’étape A1, on a exporté les runs en **CSV** et on a construit un notebook qui :
-- charge les runs,
-- calcule les erreurs \(e_x\), \(e_y\),
-- calcule la norme 2D \(e_{2d}=\sqrt{e_x^2+e_y^2}\),
-- calcule le **RMSE**,
-- affiche les courbes pour comparer les 3 configurations EKF.
-
-Cette partie est utile pour analyser calmement les performances et garder une base reproductible.
 
 ---
 
