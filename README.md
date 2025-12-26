@@ -116,6 +116,8 @@ Cela valide la cohérence entre les deux approches (offline et online).
 
 
 ---
+---
+---
 
 ## Étape A2 : Chaîne temps réel ROS2 (topics, métriques live, visualisation)
 L’objectif de l’étape A2 est d’avoir la même analyse, mais **en direct** :
