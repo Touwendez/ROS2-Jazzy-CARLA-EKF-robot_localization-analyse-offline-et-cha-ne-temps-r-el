@@ -56,14 +56,16 @@ Le node :
 
 À chaque paire de messages synchronisés, les métriques suivantes sont calculées :
 
+### Métriques calculées
+
 - **Erreur en x**  
-  \( e_x = x_{EKF} - x_{ref} \)
+  `e_x = x_EKF - x_ref`
 
 - **Erreur en y**  
-  \( e_y = y_{EKF} - y_{ref} \)
+  `e_y = y_EKF - y_ref`
 
 - **Erreur de position 2D**  
-  \( e_{2D} = \sqrt{e_x^2 + e_y^2} \)
+  `e_2D = sqrt(e_x^2 + e_y^2)`
 
 - **Latence temporelle**  
   Différence entre le timestamp de la sortie EKF et celui de la référence.
@@ -94,7 +96,7 @@ Cette architecture rend le système **modulaire** et permet d’utiliser différ
 ### Erreur de position
 La valeur instantanée observée pour l’erreur 2D est de l’ordre de :
 
-- \( e_{2D} \approx 1 \times 10^{-8} \, m \)
+`e_2D ≈ 1 × 10^-8 m`
 
 Cette valeur est négligeable et indique une superposition quasi parfaite entre la trajectoire estimée par l’EKF et la trajectoire de référence fournie par CARLA (dans cette configuration).
 
