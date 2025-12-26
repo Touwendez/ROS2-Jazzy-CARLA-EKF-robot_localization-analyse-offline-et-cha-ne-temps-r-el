@@ -199,35 +199,6 @@ ros2 topic echo /clock --once
 
 ---
 
-## Discussion et limites
-Dans la configuration actuelle, l’odométrie issue du simulateur CARLA est **très précise**.  
-Par conséquent :
-- l’erreur mesurée est extrêmement faible,
-- le filtre EKF ne montre pas de gain visible par rapport à la référence.
-
-C’est toutefois normal dans un environnement de simulation idéal.  
-Cela justifie la mise en place de scénarios plus réalistes dans les étapes suivantes, notamment via :
-- ajout de bruit,
-- capteurs dégradés.
-
----
-
-## Conclusion
-L’étape A1 valide la mise en place d’une chaîne ROS 2 temps réel complète, allant :
-- de la souscription aux topics de capteurs et d’estimation,
-- au calcul en ligne des métriques d’erreur et de performance,
-- jusqu’à la publication de ces métriques sous forme de nouveaux topics.
-
-Cette étape constitue une base solide pour la suite du projet, en particulier pour :
-- la visualisation temps réel des performances,
-- l’étude de scénarios plus complexes,
-- l’analyse de l’impact des réglages du filtre EKF.
-
----
-
-
-
-
 # Procédure complète (A2) — Lancer le rosbag, l’EKF, les métriques et PlotJuggler
 
 Ce document décrit la procédure que nous utilisons pour reproduire la chaîne “temps réel” :
