@@ -92,9 +92,6 @@ Les métriques sont publiées sous forme de topics ROS 2 :
 - `/metrics/compute_ms`
 
 
-<img width="662" height="74" alt="Screenshot from 2025-12-26 18-31-06" src="https://github.com/user-attachments/assets/15658051-5d62-4fff-a08e-9b912a57e9b8" />
-
-
 Cette architecture rend le système **modulaire** et permet d’utiliser différents outils de visualisation/analyse sans modifier le calcul des métriques.
 
 ---
@@ -104,7 +101,13 @@ Cette architecture rend le système **modulaire** et permet d’utiliser différ
 ### Erreur de position
 La valeur instantanée observée pour l’erreur 2D est de l’ordre de :
 
+
 <img width="153" height="39" alt="Screenshot from 2025-12-26 17-52-41" src="https://github.com/user-attachments/assets/028fabf2-6900-4e32-a9e8-2dd42c0f28b8" />
+
+
+---
+
+<img width="662" height="74" alt="Screenshot from 2025-12-26 18-31-06" src="https://github.com/user-attachments/assets/15658051-5d62-4fff-a08e-9b912a57e9b8" />
 
 
 Cette valeur est négligeable et indique une superposition quasi parfaite entre la trajectoire estimée par l’EKF et la trajectoire de référence fournie par CARLA (dans cette configuration).
