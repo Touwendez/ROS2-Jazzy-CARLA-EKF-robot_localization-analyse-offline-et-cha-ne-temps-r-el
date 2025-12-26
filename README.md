@@ -78,6 +78,9 @@ Le node :
 
 ## Topics de sortie (métriques publiées)
 
+<img width="425" height="395" alt="Screenshot from 2025-12-26 16-16-03" src="https://github.com/user-attachments/assets/3a5f4a55-d3f4-43ee-8631-223d87fce86f" />
+
+
 Les métriques sont publiées sous forme de topics ROS 2 :
 
 - `/metrics/ex`
@@ -87,6 +90,10 @@ Les métriques sont publiées sous forme de topics ROS 2 :
 - `/metrics/offset_ts`
 - `/metrics/lag_sim`
 - `/metrics/compute_ms`
+
+
+<img width="662" height="74" alt="Screenshot from 2025-12-26 18-31-06" src="https://github.com/user-attachments/assets/15658051-5d62-4fff-a08e-9b912a57e9b8" />
+
 
 Cette architecture rend le système **modulaire** et permet d’utiliser différents outils de visualisation/analyse sans modifier le calcul des métriques.
 
