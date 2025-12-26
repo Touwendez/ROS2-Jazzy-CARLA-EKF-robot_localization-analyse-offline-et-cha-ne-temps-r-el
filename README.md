@@ -1,3 +1,155 @@
+
+# A1 — Analyse temps réel basée sur des topics ROS 2
+
+## Objectif de l’étape A1
+
+L’objectif est de se rapprocher d’un fonctionnement réaliste : les métriques de performance du filtre **EKF** sont calculées **au fil de l’arrivée des données**, sans étape intermédiaire d’enregistrement.
+
+L’étape A1 consiste donc à :
+- comparer en temps réel la sortie du filtre EKF à une référence,
+- calculer des métriques d’erreur et de performance,
+- publier ces métriques sous forme de topics ROS 2 exploitables par des outils de visualisation.
+
+---
+
+## Chaîne ROS 2 mise en place
+
+### Données d’entrée
+Deux sources principales sont utilisées :
+
+1) **Référence (ground truth)**  
+Topic : `/carla/hero/odometry`  
+Ce topic fournit la pose du véhicule issue du simulateur **CARLA**, considérée comme référence dans ce contexte.
+
+2) **Estimation EKF**  
+Topic : `/odometry/filtered`  
+Ce topic correspond à la sortie du filtre EKF du package `robot_localization`, configuré à partir des capteurs disponibles (odométrie et/ou IMU selon les tests).
+
+> Les données sont rejouées à partir d’un **rosbag en boucle**, ce qui permet de tester le système sur un scénario identique et répétable.
+
+---
+
+## Synchronisation des messages
+Les messages provenant des deux topics ne sont pas publiés exactement au même instant.  
+Pour comparer des états correspondant au même moment de la trajectoire, une synchronisation approximative est utilisée :
+
+- **Approximate Time Synchronizer**
+
+Cette méthode associe deux messages dont les timestamps sont proches, tout en restant tolérante à de légers décalages temporels.
+
+---
+
+## Node d’analyse temps réel
+
+Un node ROS 2 Python (`online_compare.py`) a été développé pour réaliser l’analyse en ligne.
+
+### Rôle du node
+Le node :
+- s’abonne aux topics de référence et de sortie EKF,
+- associe les messages synchronisés,
+- calcule les métriques d’erreur et de performance,
+- publie ces métriques sur de nouveaux topics ROS 2.
+
+---
+
+## Métriques calculées
+
+À chaque paire de messages synchronisés, les métriques suivantes sont calculées :
+
+- **Erreur en x**  
+  \( e_x = x_{EKF} - x_{ref} \)
+
+- **Erreur en y**  
+  \( e_y = y_{EKF} - y_{ref} \)
+
+- **Erreur de position 2D**  
+  \( e_{2D} = \sqrt{e_x^2 + e_y^2} \)
+
+- **Latence temporelle**  
+  Différence entre le timestamp de la sortie EKF et celui de la référence.
+
+- **RMSE 2D glissant**  
+  Calculé sur une fenêtre temporelle glissante (quelques secondes), permettant de suivre l’évolution récente de l’erreur.
+
+---
+
+## Topics de sortie (métriques publiées)
+
+Les métriques sont publiées sous forme de topics ROS 2 :
+
+- `/metrics/ex`
+- `/metrics/ey`
+- `/metrics/e2d`
+- `/metrics/rmse2d_window`
+- `/metrics/offset_ts`
+- `/metrics/lag_sim`
+- `/metrics/compute_ms`
+
+Cette architecture rend le système **modulaire** et permet d’utiliser différents outils de visualisation/analyse sans modifier le calcul des métriques.
+
+---
+
+## Résultats obtenus
+
+### Erreur de position
+La valeur instantanée observée pour l’erreur 2D est de l’ordre de :
+
+- \( e_{2D} \approx 1 \times 10^{-8} \, m \)
+
+Cette valeur est négligeable et indique une superposition quasi parfaite entre la trajectoire estimée par l’EKF et la trajectoire de référence fournie par CARLA (dans cette configuration).
+
+### Fréquence de publication
+Les métriques sont publiées à une fréquence moyenne d’environ **6 à 7 Hz**, correspondant au rythme effectif des paires de messages synchronisées (référence + sortie EKF).
+
+La fréquence est stable, ce qui confirme le bon fonctionnement :
+- du mécanisme de synchronisation,
+- du calcul en temps réel.
+
+### Cohérence avec l’analyse hors-ligne
+Les résultats en temps réel sont cohérents avec l’analyse hors-ligne (CSV) :
+- RMSE quasi nul pour les configurations utilisant l’odométrie,
+- absence de latence significative.
+
+Cela valide la cohérence entre les deux approches (offline et online).
+
+---
+
+## Discussion et limites
+Dans la configuration actuelle, l’odométrie issue du simulateur CARLA est **très précise**.  
+Par conséquent :
+- l’erreur mesurée est extrêmement faible,
+- le filtre EKF ne montre pas de gain visible par rapport à la référence.
+
+C’est toutefois normal dans un environnement de simulation idéal.  
+Cela justifie la mise en place de scénarios plus réalistes dans les étapes suivantes, notamment via :
+- ajout de bruit,
+- capteurs dégradés.
+
+---
+
+## Conclusion
+L’étape A1 valide la mise en place d’une chaîne ROS 2 temps réel complète, allant :
+- de la souscription aux topics de capteurs et d’estimation,
+- au calcul en ligne des métriques d’erreur et de performance,
+- jusqu’à la publication de ces métriques sous forme de nouveaux topics.
+
+Cette étape constitue une base solide pour la suite du projet, en particulier pour :
+- la visualisation temps réel des performances,
+- l’étude de scénarios plus complexes,
+- l’analyse de l’impact des réglages du filtre EKF.
+
+---
+
+## Commandes de reproduction (rejouer l’étape A1)
+
+### Terminal 1 — Lecture du rosbag
+```bash
+source /opt/ros/jazzy/setup.bash
+ros2 bag play ~/Téléchargements/carla_data/carla_data_0.db3 --loop
+
+
+
+
 #  EKF (robot_localization) : analyse offline chaîne temps réel
 
 ## Pourquoi ce dépôt existe
