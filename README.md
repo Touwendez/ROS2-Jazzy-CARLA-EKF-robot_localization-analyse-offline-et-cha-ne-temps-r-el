@@ -65,7 +65,8 @@ Le node :
   `e_y = y_EKF - y_ref`
 
 - **Erreur de position 2D**  
-  `e_2D = sqrt(e_x^2 + e_y^2)`
+  <img width="159" height="67" alt="Screenshot from 2025-12-26 17-51-23" src="https://github.com/user-attachments/assets/5b993842-879d-42a2-a581-57c035862629" />
+
 
 - **Latence temporelle**  
   Différence entre le timestamp de la sortie EKF et celui de la référence.
@@ -96,7 +97,8 @@ Cette architecture rend le système **modulaire** et permet d’utiliser différ
 ### Erreur de position
 La valeur instantanée observée pour l’erreur 2D est de l’ordre de :
 
-`e_2D ≈ 1 × 10^-8 m`
+<img width="153" height="39" alt="Screenshot from 2025-12-26 17-52-41" src="https://github.com/user-attachments/assets/028fabf2-6900-4e32-a9e8-2dd42c0f28b8" />
+
 
 Cette valeur est négligeable et indique une superposition quasi parfaite entre la trajectoire estimée par l’EKF et la trajectoire de référence fournie par CARLA (dans cette configuration).
 
