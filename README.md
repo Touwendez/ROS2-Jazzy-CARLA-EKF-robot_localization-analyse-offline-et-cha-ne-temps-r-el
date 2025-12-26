@@ -116,14 +116,6 @@ Cela valide la cohérence entre les deux approches (offline et online).
 
 ---
 
-## Commandes de reproduction (rejouer l’étape A1)
-
-### Terminal 1 — Lecture du rosbag
-```bash
-source /opt/ros/jazzy/setup.bash
-ros2 bag play ~/Téléchargements/carla_data/carla_data_0.db3 --loop
-
----
 ---
 
 ## Étape A2 : Chaîne temps réel ROS2 (topics, métriques live, visualisation)
