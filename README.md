@@ -114,8 +114,15 @@ Les résultats en temps réel sont cohérents avec l’analyse hors-ligne (CSV) 
 
 Cela valide la cohérence entre les deux approches (offline et online).
 
-
 ---
+
+## Commandes de reproduction (rejouer l’étape A1)
+
+### Terminal 1 — Lecture du rosbag
+```bash
+source /opt/ros/jazzy/setup.bash
+ros2 bag play ~/Téléchargements/carla_data/carla_data_0.db3 --loop
+
 ---
 ---
 
@@ -176,60 +183,28 @@ Quelques remarques pour lire correctement la vidéo :
 
 ---
 
-# Comment reproduire la démo (pas à pas)
+## Discussion et limites
+Dans la configuration actuelle, l’odométrie issue du simulateur CARLA est **très précise**.  
+Par conséquent :
+- l’erreur mesurée est extrêmement faible,
+- le filtre EKF ne montre pas de gain visible par rapport à la référence.
 
-## 1) Rejouer le rosbag (en boucle + horloge simulée)
-On démarre par le rosbag. C’est lui qui fournit les données (odom/IMU/etc.) et l’horloge `/clock`.
-
-```bash
-ros2 bag play ~/Téléchargements/carla_data --loop --clock
-
-
-## Étape A2 — Visualisation live (PlotJuggler) et vérifications
-
-Cette partie décrit la procédure que nous utilisons pour reproduire la démo “temps réel” à partir d’un rosbag : lecture des données, lancement de l’EKF `robot_localization`, calcul des métriques en ligne, puis affichage dans PlotJuggler. L’objectif est d’avoir une chaîne cohérente en temps simulé, afin de comparer correctement la sortie filtrée et la vérité terrain.
-
-### 1) Vérifier que l’horloge simulée est disponible
-Avant de lancer l’EKF, on s’assure que `/clock` existe et avance. C’est indispensable dès qu’on utilise `use_sim_time=true`.
-
-```bash
-ros2 topic list | grep clock
-ros2 topic echo /clock --once
-
+C’est toutefois normal dans un environnement de simulation idéal.  
+Cela justifie la mise en place de scénarios plus réalistes dans les étapes suivantes, notamment via :
+- ajout de bruit,
+- capteurs dégradés.
 
 ---
 
-# Procédure complète (A2) — Lancer le rosbag, l’EKF, les métriques et PlotJuggler
+## Conclusion
+L’étape A1 valide la mise en place d’une chaîne ROS 2 temps réel complète, allant :
+- de la souscription aux topics de capteurs et d’estimation,
+- au calcul en ligne des métriques d’erreur et de performance,
+- jusqu’à la publication de ces métriques sous forme de nouveaux topics.
 
-Ce document décrit la procédure que nous utilisons pour reproduire la chaîne “temps réel” :
-rosbag → EKF (`robot_localization`) → calcul des métriques → visualisation PlotJuggler.
-
-L’idée est simple : on rejoue un scénario enregistré, on filtre avec l’EKF, puis on compare en ligne la sortie filtrée à la vérité terrain.
-
----
-
-## Pré-requis
-- ROS2 Jazzy installé et sourcé (`source /opt/ros/jazzy/setup.bash`)
-- Workspace sourcé si besoin (`source ~/ros2_ws/install/setup.bash`)
-- Le rosbag CARLA (dossier contenant `metadata.yaml` + `.db3`)
-- Les scripts et la config EKF présents dans le repo :
-  - `config/ekf_imu_odom.yaml`
-  - `scripts/online_compare.py`
+Cette étape constitue une base solide pour la suite du projet, en particulier pour :
+- la visualisation temps réel des performances,
+- l’étude de scénarios plus complexes,
+- l’analyse de l’impact des réglages du filtre EKF.
 
 ---
-
-## Organisation conseillée (4 terminaux)
-- Terminal 1 : rosbag
-- Terminal 2 : EKF
-- Terminal 3 : métriques (online_compare)
-- Terminal 4 : PlotJuggler + vérifications
-
----
-
-## Étape 0 — (Optionnel mais recommandé) Sourcing
-À faire dans chaque terminal si nécessaire :
-
-```bash
-source /opt/ros/jazzy/setup.bash
-source ~/ros2_ws/install/setup.bash
-
