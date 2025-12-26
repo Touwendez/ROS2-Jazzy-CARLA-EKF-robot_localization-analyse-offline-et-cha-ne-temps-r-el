@@ -214,7 +214,7 @@ Cette étape constitue une base solide pour la suite du projet, en particulier p
 ---
 
 
-# C — Étude paramétrique des incertitudes EKF (Q et P0) avec `robot_localization`
+# C : Étude paramétrique des incertitudes EKF (Q et P0) avec `robot_localization`
 
 ## C.1 Objectif
 
@@ -222,14 +222,14 @@ L’objectif de cette partie est d’étudier l’influence des **paramètres d�
 
 Plus précisément, on cherche à comprendre l’effet de :
 
-- **Q — process_noise_covariance** : incertitude associée au **modèle de prédiction** (processus).
+- **Q : process_noise_covariance** : incertitude associée au **modèle de prédiction** (processus).
   → Q élevé : on considère que le modèle est moins fiable.  
   → Q faible : on considère que le modèle est plus fiable.
 
-- **P0 — initial_estimate_covariance** : incertitude sur **l’état initial** au démarrage.
+- **P0 : initial_estimate_covariance** : incertitude sur **l’état initial** au démarrage.
   → P0 élevé : le filtre “admet” qu’il ne connait pas bien l’état initial et corrige plus fortement au début.
 
-Cette étude s’inscrit dans la demande de l’encadrante : relier les choix de paramètres (Q/P0) aux résultats observables (erreurs, stabilité, réactivité, etc.).
+Cette étude s’inscrit dans le choix de paramètres (Q/P0) aux résultats observables (erreurs, stabilité, réactivité, etc.).
 
 ---
 
@@ -252,7 +252,7 @@ erreur du type :
 
 ---
 
-## C.3 Protocole expérimental (démarche)
+## C.3 Protocole expérimental
 
 L’expérimentation a été menée de manière reproductible en rejouant les **mêmes données** CARLA pour les
 trois configurations.
