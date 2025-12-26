@@ -212,3 +212,176 @@ Cette étape constitue une base solide pour la suite du projet, en particulier p
 - l’analyse de l’impact des réglages du filtre EKF.
 
 ---
+
+
+# C — Étude paramétrique des incertitudes EKF (Q et P0) avec `robot_localization`
+
+## C.1 Objectif
+
+L’objectif de cette partie est d’étudier l’influence des **paramètres d’incertitude** du filtre EKF (`robot_localization`) sur les performances d’estimation de pose dans un environnement simulé CARLA.
+
+Plus précisément, on cherche à comprendre l’effet de :
+
+- **Q — process_noise_covariance** : incertitude associée au **modèle de prédiction** (processus).
+  → Q élevé : on considère que le modèle est moins fiable.  
+  → Q faible : on considère que le modèle est plus fiable.
+
+- **P0 — initial_estimate_covariance** : incertitude sur **l’état initial** au démarrage.
+  → P0 élevé : le filtre “admet” qu’il ne connait pas bien l’état initial et corrige plus fortement au début.
+
+Cette étude s’inscrit dans la demande de l’encadrante : relier les choix de paramètres (Q/P0) aux résultats observables (erreurs, stabilité, réactivité, etc.).
+
+---
+
+## C.2 Configurations testées
+
+Trois configurations EKF ont été créées dans le répertoire :
+
+`~/ros2_ws/src/my_py_pkg/config/test_compare/`
+
+1. **Qlow** : configuration avec **Q faible**
+2. **Qhigh** : configuration avec **Q élevée**
+3. **P0high** : configuration avec **P0 élevée** (Q conservée “moyenne” pour isoler l’effet de P0)
+
+Remarque technique importante (ROS2 / YAML) : lors de la création des fichiers, ROS2 refuse une liste
+qui mélange des entiers (`0`) et des flottants (`0.0`, `1e-3`, etc.).
+Il a donc fallu écrire **uniquement des flottants** dans les matrices (utiliser `0.0` au lieu de `0`), sinon
+erreur du type :
+
+`Sequence should be of same type. Value type 'integer' do not belong ...`
+
+---
+
+## C.3 Protocole expérimental (démarche)
+
+L’expérimentation a été menée de manière reproductible en rejouant les **mêmes données** CARLA pour les
+trois configurations.
+
+### C.3.1 Données et topics utilisés
+
+- **Données** : rosbag CARLA rejoué en boucle
+- **Référence (ground truth simulation)** : `/carla/hero/odometry`
+- **Sortie du filtre EKF** : `/odometry/filtered`
+
+### C.3.2 Étapes d’un run (valable pour chaque config)
+
+Pour chaque configuration (Qlow, Qhigh, P0high), la procédure est identique :
+
+1. Lecture du rosbag CARLA en boucle :
+
+   `ros2 bag play <bag> --loop`
+
+2. Lancement du filtre EKF :
+
+   `ros2 run robot_localization ekf_node --ros-args --params-file <config.yaml>`
+
+3. Enregistrement comparatif des données via `compare_logger.py` :
+   - Synchronisation approx des messages référence (hero) et EKF (filtered)
+   - Génération d’un CSV contenant : timestamps, positions, orientations, et delta temps
+
+4. Renommage du CSV de façon explicite :
+   - `run_Qlow.csv`
+   - `run_Qhigh.csv`
+   - `run_P0high.csv`
+
+---
+
+## C.3.3 Extraction des métriques et création du tableau
+
+Un script Python `summarize_runs.py` lit les trois fichiers CSV et calcule automatiquement :
+
+- **RMSE_x**, **RMSE_y**, **RMSE_2D**
+- **RMSE_yaw**
+- **lat_mean**, **lat_max**
+- durée analysée et fréquence nominale estimée
+
+Le résultat est sauvegardé dans `runs_summary.csv`.
+
+---
+
+## C.4 Métriques retenues
+
+Les métriques utilisées sont :
+
+- **RMSE_x [m]** : écart quadratique moyen sur l’axe x entre EKF et référence
+- **RMSE_y [m]** : écart quadratique moyen sur l’axe y
+- **RMSE_2D [m]** : RMSE sur la norme 2D = √ ( (x_f − x_h)² + (y_f − y_h)² )
+- **RMSE_yaw [rad]** : RMSE sur l’angle yaw (en tenant compte du wrap [−π, π])
+- **lat_mean [s] / lat_max [s]** : différence temporelle moyenne / max entre les timestamps appariés
+- **dt_nom_s / hz_ref** : pas de temps nominal et fréquence de référence estimée
+
+---
+
+## C.6 Analyse et interprétation des résultats
+
+### C.6.1 Observations générales
+
+Les RMSE obtenus sont extrêmement faibles (ordre de grandeur 10⁻⁶ m, soit quelques micromètres).
+De même, la latence mesurée est nulle (`lat_mean = lat_max = 0.0 s`).
+
+Ces résultats indiquent que, dans ce scénario, l’estimation EKF est **quasi identique** à la référence CARLA.
+
+**Explication principale** : les données simulées CARLA (en particulier l’odométrie) sont très propres et
+cohérentes, ce qui conduit naturellement à une superposition quasi parfaite entre référence et sortie EKF.
+Dans ce contexte, l’impact de Q et P0 sur le RMSE global est faible, car la correction du filtre repose sur une
+mesure déjà très précise.
+
+### C.6.2 Effet de Q (Qlow vs Qhigh)
+
+Théoriquement :
+
+- **Q faible (Qlow)** : le filtre considère que le modèle de prédiction est fiable → comportement attendu :
+  estimation plus “rigide” et plus lissée.
+- **Q élevé (Qhigh)** : le filtre considère que le modèle est incertain → comportement attendu : estimation
+  potentiellement plus réactive (et plus sensible aux mesures).
+
+Dans nos résultats, l’erreur reste quasi nulle dans les deux cas. Les différences observées (de l’ordre du
+micro-mètre) restent très faibles et peuvent être influencées par :
+
+- la précision numérique,
+- la synchronisation approx des messages,
+- la durée légèrement différente des runs.
+
+On peut donc conclure que **dans ce scénario CARLA**, la différence entre Qlow et Qhigh ne se traduit pas
+par un gain significatif en RMSE global.
+
+### C.6.3 Effet de P0 (P0high)
+
+Théoriquement, P0 agit surtout au démarrage du filtre :
+
+- **P0 élevé** : le filtre part avec une forte incertitude → il accepte plus facilement les corrections initiales
+  (convergence potentiellement plus rapide).
+- **P0 faible** : le filtre est “confiant” dès le début → corrections initiales plus faibles.
+
+Dans ce test, l’erreur globale étant déjà extrêmement faible, l’effet de P0 n’apparaît pas fortement dans les
+RMSE finaux. Cependant, P0high donne ici les plus faibles RMSE (toujours dans des valeurs très petites),
+ce qui reste cohérent avec une convergence initiale légèrement plus “souple”.
+
+### C.6.4 Latence et cohérence temporelle
+
+Les valeurs `lat_mean` et `lat_max` sont à 0.0 s, ce qui signifie que les couples de messages (référence vs
+EKF) ont été synchronisés sans décalage notable.
+
+Cela valide la cohérence de la méthode de comparaison.
+
+---
+
+## C.7 Conclusion de la partie C
+
+Cette partie a permis de :
+
+1. Mettre en place une **méthode reproductible** de test paramétrique (Q/P0) :
+   - rosbag identique,
+   - exécution EKF avec paramètres contrôlés,
+   - génération de CSV,
+   - extraction automatique des métriques,
+   - construction d’un tableau comparatif.
+
+2. Observer que, sur ce scénario CARLA, les performances mesurées sont quasi parfaites (RMSE ~ 10⁻⁶
+   m), ce qui masque en grande partie l’impact des variations de Q et P0 sur l’erreur globale.
+
+Ainsi, la campagne C valide surtout la **démarche** et l’outil de comparaison.
+
+Pour rendre l’impact des covariances plus visible et interprétable, la suite logique est de travailler sur des
+scénarios plus “difficiles” (bruit artificiel, changements de conduite, perturbations), ce qui permettra de relier
+plus clairement les paramètres Q/R/P0 aux courbes et aux métriques (RMSE, stabilité, réactivité).
