@@ -114,34 +114,6 @@ Les résultats en temps réel sont cohérents avec l’analyse hors-ligne (CSV) 
 
 Cela valide la cohérence entre les deux approches (offline et online).
 
----
-
-## Discussion et limites
-Dans la configuration actuelle, l’odométrie issue du simulateur CARLA est **très précise**.  
-Par conséquent :
-- l’erreur mesurée est extrêmement faible,
-- le filtre EKF ne montre pas de gain visible par rapport à la référence.
-
-C’est toutefois normal dans un environnement de simulation idéal.  
-Cela justifie la mise en place de scénarios plus réalistes dans les étapes suivantes, notamment via :
-- ajout de bruit,
-- capteurs dégradés.
-
----
-
-## Conclusion
-L’étape A1 valide la mise en place d’une chaîne ROS 2 temps réel complète, allant :
-- de la souscription aux topics de capteurs et d’estimation,
-- au calcul en ligne des métriques d’erreur et de performance,
-- jusqu’à la publication de ces métriques sous forme de nouveaux topics.
-
-Cette étape constitue une base solide pour la suite du projet, en particulier pour :
-- la visualisation temps réel des performances,
-- l’étude de scénarios plus complexes,
-- l’analyse de l’impact des réglages du filtre EKF.
-
----
-
 
 ---
 
@@ -150,16 +122,22 @@ L’objectif de l’étape A2 est d’avoir la même analyse, mais **en direct**
 - l’EKF tourne dans ROS2,
 - un node calcule les métriques en continu,
 - PlotJuggler affiche les courbes en temps réel.
+### Cohérence des timestamps (temps simulé vs temps système)
 
-### Un point important : les timestamps doivent être cohérents
-On a rencontré (et corrigé) un problème classique :  
+Un point critique a été identifié puis corrigé : **les deux sources comparées doivent partager la même base de temps**.
+
+Dans notre cas :
 - la vérité terrain CARLA (ex. `/carla/hero/odometry`) est horodatée en **temps simulé** (ex. ~180 s),
-- la sortie EKF pouvait être horodatée en **temps système (epoch)**.
+- la sortie du filtre EKF pouvait être horodatée en **temps système** (type epoch).
 
-Dans ce cas, comparer les messages “instant par instant” n’a plus de sens.  
-La solution propre consiste à :
-- jouer le rosbag avec `--clock` (publication de `/clock`),
-- activer `use_sim_time:=true` sur l’EKF et sur le node de métriques.
+Cette divergence rend la synchronisation invalide : les messages ne correspondent plus au même instant, et la comparaison “point à point” (ainsi que les métriques) n’a plus de sens.
+
+#### Correction appliquée (configuration recommandée)
+Pour garantir une comparaison correcte, toute la chaîne est forcée en **temps simulé** :
+
+- jouer le rosbag en publiant l’horloge :
+  ```bash
+  ros2 bag play <bag> --loop --clock
 
 ---
 
@@ -215,6 +193,38 @@ Avant de lancer l’EKF, on s’assure que `/clock` existe et avance. C’est in
 ```bash
 ros2 topic list | grep clock
 ros2 topic echo /clock --once
+
+
+---
+
+## Discussion et limites
+Dans la configuration actuelle, l’odométrie issue du simulateur CARLA est **très précise**.  
+Par conséquent :
+- l’erreur mesurée est extrêmement faible,
+- le filtre EKF ne montre pas de gain visible par rapport à la référence.
+
+C’est toutefois normal dans un environnement de simulation idéal.  
+Cela justifie la mise en place de scénarios plus réalistes dans les étapes suivantes, notamment via :
+- ajout de bruit,
+- capteurs dégradés.
+
+---
+
+## Conclusion
+L’étape A1 valide la mise en place d’une chaîne ROS 2 temps réel complète, allant :
+- de la souscription aux topics de capteurs et d’estimation,
+- au calcul en ligne des métriques d’erreur et de performance,
+- jusqu’à la publication de ces métriques sous forme de nouveaux topics.
+
+Cette étape constitue une base solide pour la suite du projet, en particulier pour :
+- la visualisation temps réel des performances,
+- l’étude de scénarios plus complexes,
+- l’analyse de l’impact des réglages du filtre EKF.
+
+---
+
+
+
 
 # Procédure complète (A2) — Lancer le rosbag, l’EKF, les métriques et PlotJuggler
 
