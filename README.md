@@ -385,3 +385,167 @@ Ainsi, la campagne C valide surtout la **démarche** et l’outil de comparaison
 Pour rendre l’impact des covariances plus visible et interprétable, la suite logique est de travailler sur des
 scénarios plus “difficiles” (bruit artificiel, changements de conduite, perturbations), ce qui permettra de relier
 plus clairement les paramètres Q/R/P0 aux courbes et aux métriques (RMSE, stabilité, réactivité).
+
+
+
+# Rapport — Tests EKF avec odométrie bruitée (Qlow / Qhigh / P0high)
+
+Ce document décrit la démarche et les premiers résultats obtenus pour évaluer un **EKF (robot_localization)** en présence d’une **odométrie bruitée artificiellement**.  
+L’objectif est de comprendre l’impact des paramètres de covariance (**Q**, **P0**) sur les performances (RMSE, stabilité).
+
+---
+
+## 1) Objectif
+
+Nous voulons observer comment le filtre EKF réagit lorsque l’odométrie est dégradée (bruit ajouté sur la pose), et comparer trois configurations :
+
+- **Qlow_noisy** : covariance de processus faible → filtre plus “rigide”
+- **Qhigh_noisy** : covariance de processus forte → filtre plus “souple”
+- **P0high_noisy** : covariance initiale élevée → effet sur la convergence au démarrage
+
+Le but est de relier :
+- **choix de covariances (Q/P0)**  
+avec  
+- **résultats observés (RMSE / stabilité)**
+
+---
+
+## 2) Environnement et données
+
+- ROS2 **Jazzy** (Linux)
+- Rosbag CARLA : `~/Téléchargements/carla_data/carla_data_0.db3`
+- EKF : `robot_localization` (`ekf_node`)
+- Scripts :
+  - `odom_noiser.py` : publie une odométrie bruitée
+  - `compare_logger.py` : enregistre un CSV (référence vs filtre)
+  - `summarize_runs.py` : résume les métriques à partir des CSV
+
+---
+
+## 3) Méthodologie
+
+### 3.1 Création d’une odométrie bruitée
+
+Un node Python (`odom_noiser.py`) :
+
+- s’abonne à : `/carla/hero/odometry`
+- publie : `/carla/hero/odometry_noisy`
+
+Le bruit ajouté est gaussien (position x/y et yaw) et la **covariance** est renseignée dans le message `Odometry` afin que le filtre puisse interpréter l’incertitude des mesures.
+
+---
+
+### 3.2 Pipeline expérimental (1 run)
+
+Pour chaque configuration EKF :
+
+1. Lecture du rosbag CARLA  
+2. Lancement du node de bruit (`odom_noiser.py`)  
+3. Lancement de l’EKF avec un YAML spécifique (basé sur `odometry_noisy`)  
+4. Lancement du logger (`compare_logger.py`) qui écrit un CSV contenant des paires synchronisées :
+   - référence : `/carla/hero/odometry`
+   - sortie EKF : `/odometry/filtered`
+
+Les 3 fichiers CSV générés sont :
+
+- `run_noisy_Qlow.csv`
+- `run_noisy_Qhigh.csv`
+- `run_noisy_P0high.csv`
+
+---
+
+## 4) Résultats (tableau de synthèse)
+
+Les métriques suivantes ont été extraites avec `summarize_runs.py`.
+
+| Config | N (points) | Durée simulée (s) | RMSE_x (m) | RMSE_y (m) | RMSE_2D (m) | lat_mean (s) | lat_max (s) |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Qlow_noisy | ~51 | ~2.50 | 1.681 | 2.303 | 2.851 | 0.0 | 0.0 |
+| Qhigh_noisy | ~54 | ~2.65 | 5.108 | 3.310 | 6.087 | 0.0 | 0.0 |
+| P0high_noisy | ~48 | ~2.35 | 0.028 | 0.033 | 0.043 | 0.0 | 0.0 |
+
+### Interprétation rapide
+- **Qhigh_noisy** présente l’erreur la plus grande (RMSE_2D ~6 m) : un **Q trop élevé** rend le filtre plus permissif et il peut davantage suivre une mesure bruitée.
+- **Qlow_noisy** est plus stable (RMSE_2D ~2.85 m) : le filtre “résiste” mieux au bruit car il fait plus confiance au modèle.
+- **P0high_noisy** donne une erreur très faible (~4 cm) sur cette fenêtre courte, mais ce résultat doit être confirmé sur des runs plus longs (P0 influence surtout la phase de démarrage).
+
+---
+
+## 5) Discussion
+
+### 5.1 Qlow vs Qhigh
+On observe une différence nette entre les deux réglages :
+
+- **Q faible** → filtre plus “rigide”, trajectoire plus stable, erreurs plus faibles
+- **Q fort** → filtre plus “souple”, suit davantage les variations, et en présence de bruit cela dégrade l’estimation
+
+Ce comportement est cohérent avec le rôle de **Q (process noise covariance)** : plus Q est grand, plus le filtre considère le modèle de mouvement incertain.
+
+---
+
+### 5.2 Effet de P0 (initial_estimate_covariance)
+Le paramètre **P0** agit principalement sur la **convergence initiale**.  
+Comme nos runs actuels couvrent seulement ~2–3 secondes de temps simulé, **P0high** peut être avantagé par l’effet “début de run”.  
+Il faudra une durée plus longue pour valider la tendance.
+
+---
+
+### 5.3 Durée et fréquence des topics
+Les runs bruités ne couvrent actuellement que **~2.3 à 2.7 secondes de temps simulé**, ce qui donne ~50 échantillons.
+
+Ce résultat correspond à la fréquence observée en temps réel :
+
+- `/carla/hero/odometry` ≈ 6.7 Hz  
+- `/odometry/filtered` ≈ 5–6 Hz  
+
+Donc avec un enregistrement basé sur un `timeout` réel, on obtient naturellement ~50–70 points sur une fenêtre courte de temps simulé.
+
+> **Remarque** : Pour des métriques plus robustes, il faudra augmenter la durée d’acquisition (ex : 30–35 s en temps réel) afin de couvrir davantage de temps simulé.
+
+---
+
+### 5.4 Synchronisation (tolérance)
+Le logger utilise une synchronisation approximative (ApproximateTimeSynchronizer).  
+Il peut arriver qu’une ou deux paires soient appariées “au mauvais voisin”, ce qui se voit par un `dt` négatif ou des pics isolés.
+
+Améliorations possibles :
+- réduire la tolérance `--tol`
+- filtrer les lignes où `dt < 0` dans l’analyse
+
+---
+
+## 6) Conclusion (état actuel)
+
+À ce stade :
+
+- La chaîne complète **rosbag → bruit → EKF → CSV → métriques** fonctionne.
+- Les réglages de covariance (**Q**, **P0**) influencent clairement les performances.
+- Les résultats sont exploitables mais encore limités par la courte durée de temps simulé.
+
+---
+
+## 7) Prochaines étapes recommandées
+
+Pour renforcer l’analyse :
+
+1. **Augmenter la durée de logging** (ex : 30–35 s réel) pour obtenir plus de temps simulé et plus de points.
+2. Standardiser les runs : même bruit (seed), même durée, même tolérance.
+3. Ajouter des visualisations comparatives :
+   - trajectoires 2D superposées
+   - erreurs temporelles (ex, ey, e2d)
+4. Étendre l’étude paramétrique :
+   - tester aussi R (covariance de mesure) en plus de Q
+   - relier clairement les choix Q/R aux courbes (RMSE / stabilité / réactivité)
+
+---
+
+## Commande utilisée pour le tableau
+
+Exemple :
+
+```bash
+python3 ~/ros2_ws/src/my_py_pkg/scripts/summarize_runs.py \
+  Qlow_noisy  ~/ros2_ws/logs/run_noisy_Qlow.csv \
+  Qhigh_noisy ~/ros2_ws/logs/run_noisy_Qhigh.csv \
+  P0high_noisy ~/ros2_ws/logs/run_noisy_P0high.csv
+
