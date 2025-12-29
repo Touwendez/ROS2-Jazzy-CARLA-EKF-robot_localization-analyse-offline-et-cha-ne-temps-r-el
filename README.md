@@ -311,9 +311,9 @@ Les métriques utilisées sont :
 - **dt_nom_s / hz_ref** : pas de temps nominal et fréquence de référence estimée
 
 ---
-## 7) Results (from `runs_summary.csv`)
+## 7) Resultats (runs_summary.csv`)
 
-| Config | File          | N   | Duration (s) | dt_nom (s) | Hz ref | RMSE_x (m)     | RMSE_y (m)     | RMSE_2D (m)    | RMSE_yaw (rad) | lat_mean (s) | lat_max (s) |
+| Config | Fichiers          | N   | Duration (s) | dt_nom (s) | Hz ref | RMSE_x (m)     | RMSE_y (m)     | RMSE_2D (m)    | RMSE_yaw (rad) | lat_mean (s) | lat_max (s) |
 |--------|---------------|-----|--------------|------------|--------|----------------|----------------|----------------|----------------|--------------|-------------|
 | Qlow   | run_Qlow.csv   | 194 | 9.65         | 0.05       | 20.0   | 3.628353e-06   | 3.554437e-06   | 5.079269e-06   | 3.799077e-07   | 0.0          | 0.0         |
 | Qhigh  | run_Qhigh.csv  | 189 | 9.40         | 0.05       | 20.0   | 1.313342e-06   | 8.758971e-07   | 1.578627e-06   | 0.000000e+00   | 0.0          | 0.0         |
@@ -474,7 +474,7 @@ Les métriques suivantes ont été extraites avec `summarize_runs.py`.
 | Qhigh_noisy | ~54 | ~2.65 | 5.108 | 3.310 | 6.087 | 0.0 | 0.0 |
 | P0high_noisy | ~48 | ~2.35 | 0.028 | 0.033 | 0.043 | 0.0 | 0.0 |
 
-### Interprétation rapide
+### Interprétation
 - **Qhigh_noisy** présente l’erreur la plus grande (RMSE_2D ~6 m) : un **Q trop élevé** rend le filtre plus permissif et il peut davantage suivre une mesure bruitée.
 - **Qlow_noisy** est plus stable (RMSE_2D ~2.85 m) : le filtre “résiste” mieux au bruit car il fait plus confiance au modèle.
 - **P0high_noisy** donne une erreur très faible (~4 cm) sur cette fenêtre courte, mais ce résultat doit être confirmé sur des runs plus longs (P0 influence surtout la phase de démarrage).
