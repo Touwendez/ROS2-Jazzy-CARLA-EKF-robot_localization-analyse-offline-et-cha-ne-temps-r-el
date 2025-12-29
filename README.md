@@ -311,6 +311,16 @@ Les métriques utilisées sont :
 - **dt_nom_s / hz_ref** : pas de temps nominal et fréquence de référence estimée
 
 ---
+## 7) Results (from `runs_summary.csv`)
+
+| Config | File          | N   | Duration (s) | dt_nom (s) | Hz ref | RMSE_x (m)     | RMSE_y (m)     | RMSE_2D (m)    | RMSE_yaw (rad) | lat_mean (s) | lat_max (s) |
+|--------|---------------|-----|--------------|------------|--------|----------------|----------------|----------------|----------------|--------------|-------------|
+| Qlow   | run_Qlow.csv   | 194 | 9.65         | 0.05       | 20.0   | 3.628353e-06   | 3.554437e-06   | 5.079269e-06   | 3.799077e-07   | 0.0          | 0.0         |
+| Qhigh  | run_Qhigh.csv  | 189 | 9.40         | 0.05       | 20.0   | 1.313342e-06   | 8.758971e-07   | 1.578627e-06   | 0.000000e+00   | 0.0          | 0.0         |
+| P0high | run_P0high.csv | 191 | 9.50         | 0.05       | 20.0   | 5.267703e-07   | 5.167356e-07   | 7.379042e-07   | 1.023289e-07   | 0.0          | 0.0         |
+
+
+---
 
 ## C.6 Analyse et interprétation des résultats
 
