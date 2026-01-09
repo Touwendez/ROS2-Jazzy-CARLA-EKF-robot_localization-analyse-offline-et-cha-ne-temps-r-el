@@ -413,7 +413,7 @@ plus clairement les paramètres Q/R/P0 aux courbes et aux métriques (RMSE, stab
 
 
 
-# Rapport — Tests EKF avec odométrie bruitée (Qlow / Qhigh / P0high)
+# Rapport: Tests EKF avec odométrie bruitée (Qlow / Qhigh / P0high)
 
 Ce document décrit la démarche et les premiers résultats obtenus pour évaluer un **EKF (robot_localization)** en présence d’une **odométrie bruitée artificiellement**.  
 L’objectif est de comprendre l’impact des paramètres de covariance (**Q**, **P0**) sur les performances (RMSE, stabilité).
